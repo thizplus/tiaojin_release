@@ -1,0 +1,283 @@
+{
+	"id": "tiaojin-environment",
+	"name": "TIAOJIN API Environment",
+	"values": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080/api/v1",
+			"description": "Base URL for the TIAOJIN API",
+			"enabled": true
+		},
+		{
+			"key": "super_email",
+			"value": "super@tiaojin.com",
+			"description": "Super admin email for login",
+			"enabled": true
+		},
+		{
+			"key": "super_password",
+			"value": "Super@123",
+			"description": "Super admin password",
+			"enabled": true
+		},
+		{
+			"key": "admin_email",
+			"value": "admin@tiaojin.com",
+			"description": "Admin user email for login",
+			"enabled": true
+		},
+		{
+			"key": "admin_password",
+			"value": "Admin@123",
+			"description": "Admin user password",
+			"enabled": true
+		},
+		{
+			"key": "agent_email",
+			"value": "agent@tiaojin.com",
+			"description": "Agent user email for login",
+			"enabled": true
+		},
+		{
+			"key": "agent_password",
+			"value": "Agent@123",
+			"description": "Agent user password",
+			"enabled": true
+		},
+		{
+			"key": "sale_email",
+			"value": "sale@tiaojin.com",
+			"description": "Sale user email for login",
+			"enabled": true
+		},
+		{
+			"key": "sale_password",
+			"value": "Sale@123",
+			"description": "Sale user password",
+			"enabled": true
+		},
+		{
+			"key": "super_token",
+			"value": "",
+			"description": "JWT token for super admin (auto-populated after login)",
+			"enabled": true
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"description": "JWT token for admin user (auto-populated after login)",
+			"enabled": true
+		},
+		{
+			"key": "agent_token",
+			"value": "",
+			"description": "JWT token for agent user (auto-populated after login)",
+			"enabled": true
+		},
+		{
+			"key": "sale_token",
+			"value": "",
+			"description": "JWT token for sale user (auto-populated after login)",
+			"enabled": true
+		},
+		{
+			"key": "workflow_token",
+			"value": "",
+			"description": "Token for workflow testing (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"description": "Refresh token (auto-populated after login)",
+			"enabled": true
+		},
+		{
+			"key": "super_user_id",
+			"value": "",
+			"description": "Super admin user ID (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "admin_user_id",
+			"value": "",
+			"description": "Admin user ID (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "agent_user_id",
+			"value": "",
+			"description": "Agent user ID (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "sale_user_id",
+			"value": "",
+			"description": "Sale user ID (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "workflow_user_id",
+			"value": "",
+			"description": "Workflow test user ID (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "test_user_id",
+			"value": "",
+			"description": "Test user ID for deletion tests (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "city_id",
+			"value": "",
+			"description": "Sample city ID (auto-populated from public cities list)",
+			"enabled": true
+		},
+		{
+			"key": "created_city_id",
+			"value": "",
+			"description": "ID of city created during testing (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "workflow_city_id",
+			"value": "",
+			"description": "City ID for workflow testing (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "last_city_id",
+			"value": "",
+			"description": "Last created city ID (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "tour_id",
+			"value": "",
+			"description": "Sample tour ID (auto-populated from public tours list)",
+			"enabled": true
+		},
+		{
+			"key": "created_tour_id",
+			"value": "",
+			"description": "ID of tour created during testing (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "workflow_tour_id",
+			"value": "",
+			"description": "Tour ID for workflow testing (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "workflow_tour_id_new",
+			"value": "",
+			"description": "New tour ID for workflow testing (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "last_tour_id",
+			"value": "",
+			"description": "Last created tour ID (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "period_id",
+			"value": "",
+			"description": "Sample period ID (auto-populated from public periods list)",
+			"enabled": true
+		},
+		{
+			"key": "created_period_id",
+			"value": "",
+			"description": "ID of period created during testing (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "workflow_period_id",
+			"value": "",
+			"description": "Period ID for workflow testing (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "last_period_id",
+			"value": "",
+			"description": "Last created period ID (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "booking_id",
+			"value": "",
+			"description": "Sample booking ID (auto-populated from bookings list)",
+			"enabled": true
+		},
+		{
+			"key": "workflow_booking_id",
+			"value": "",
+			"description": "Booking ID for workflow testing (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "last_booking_id",
+			"value": "",
+			"description": "Last created booking ID (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "banner_id",
+			"value": "",
+			"description": "Sample banner ID (auto-populated from banners list)",
+			"enabled": true
+		},
+		{
+			"key": "created_banner_id",
+			"value": "",
+			"description": "ID of banner created during testing (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "last_banner_id",
+			"value": "",
+			"description": "Last created banner ID (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "sales_record_id",
+			"value": "",
+			"description": "Sample sales record ID (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "last_sales_id",
+			"value": "",
+			"description": "Last created sales record ID (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"description": "General user ID for testing (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "last_user_id",
+			"value": "",
+			"description": "Last user ID from login (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "workflow_email",
+			"value": "",
+			"description": "Email for workflow testing (auto-populated)",
+			"enabled": true
+		},
+		{
+			"key": "file_id",
+			"value": "",
+			"description": "File ID for file operations (auto-populated)",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment"
+}

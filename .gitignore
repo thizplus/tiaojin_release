@@ -1,0 +1,42 @@
+# Dependencies
+vite/node_modules/
+gofiber/vendor/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Credentials / Secrets
+gofiber/pkg/credentials/
+*.json.key
+*-service-account*.json
+
+# Build outputs
+vite/dist/
+gofiber/tmp/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# AI dev notes (local only)
+.ai_dev/
+.claude/
+
+# Old migration docs (not needed in release)
+logs.txt
+MIGRATION_PLAN.md
+MIGRATION_CHECKLIST.md
+MIGRATION_SUMMARY.md
+CLEANUP_PLAN.md
+require_session2.txt
+require_session2_analysis.md

@@ -1,0 +1,277 @@
+import React, { memo, useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useBanner } from "@/hooks/useBanner";
+import { Loader2 } from "lucide-react";
+import { FileUpload } from "@/components/ui/file-upload";
+import type { Banner, UpdateBannerRequest } from "@/types";
+
+interface EditBannerDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  banner: Banner | null;
+  onSuccess?: () => void;
+}
+
+export const EditBannerDialog = memo(function EditBannerDialog({
+  open,
+  onOpenChange,
+  banner,
+  onSuccess
+}: EditBannerDialogProps) {
+  const [formData, setFormData] = useState<UpdateBannerRequest>({
+    title: '',
+    image: '',
+    link_url: '',
+    alt: '',
+    display_order: 0,
+    position: 'internal',
+    status: 'draft'
+  });
+
+  const { updateBanner, isUpdateLoading, refetchBannersList } = useBanner();
+
+  // Load banner data into form when banner changes or dialog opens
+  useEffect(() => {
+    if (banner && open) {
+      setFormData({
+        title: banner.title,
+        image: banner.image,
+        link_url: banner.link_url || '',
+        alt: banner.alt || '',
+        display_order: banner.display_order,
+        position: banner.position || 'internal',
+        status: banner.status as 'publish' | 'draft'
+      });
+    }
+  }, [banner, open]);
+
+  // Handle form input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'display_order' ? parseInt(value) || 0 : value
+    }));
+  };
+
+  // Handle select changes
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Form validation
+  const isFormValid = formData.title?.trim() !== '' && formData.image?.trim() !== '';
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!isFormValid || !banner) {
+      return;
+    }
+
+    try {
+      // Prepare data, remove empty optional fields
+      const dataToSubmit: UpdateBannerRequest = {
+        ...formData,
+        link_url: formData.link_url?.trim() || undefined,
+        alt: formData.alt?.trim() || undefined,
+      };
+
+      await updateBanner(banner.id, dataToSubmit);
+
+      // Revalidate banners list to show updated data
+      refetchBannersList();
+
+      onOpenChange(false);
+      onSuccess?.();
+    } catch (error) {
+      console.error('Failed to update banner:', error);
+    }
+  };
+
+  // Close dialog on ESC key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isUpdateLoading) {
+        onOpenChange(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onOpenChange, isUpdateLoading]);
+
+  // Don't render if no banner is selected
+  if (!banner && open) {
+    return null;
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={isUpdateLoading ? undefined : onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>แก้ไขแบนเนอร์</DialogTitle>
+          <DialogDescription>
+            แก้ไขข้อมูลแบนเนอร์: {banner?.title}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">ชื่อแบนเนอร์ <span className="text-red-500">*</span></Label>
+              <Input
+                id="title"
+                name="title"
+                value={formData.title || ''}
+                onChange={handleInputChange}
+                placeholder="ชื่อแบนเนอร์"
+                required
+                autoFocus
+                disabled={isUpdateLoading}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>รูปภาพ <span className="text-red-500">*</span></Label>
+              <FileUpload
+                structuredOptions={{
+                  category: 'banners',
+                  file_type: 'image'
+                }}
+                accept="image/*"
+                maxSize={5 * 1024 * 1024} // 5MB
+                allowedTypes={['image/jpeg', 'image/png', 'image/webp']}
+                value={formData.image || ''}
+                onChange={(url) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    image: url || ''
+                  }));
+                }}
+                variant="dropzone"
+                size="md"
+                placeholder="เลือกรูปภาพแบนเนอร์หรือลากมาวาง"
+                disabled={isUpdateLoading}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="link_url">ลิงก์ (URL) <span className="text-muted-foreground text-xs font-normal">(ไม่บังคับ)</span></Label>
+              <Input
+                id="link_url"
+                name="link_url"
+                type="url"
+                value={formData.link_url || ''}
+                onChange={handleInputChange}
+                placeholder="https://example.com"
+                disabled={isUpdateLoading}
+              />
+              <p className="text-xs text-muted-foreground">
+                URL ที่จะเปิดเมื่อคลิกที่แบนเนอร์ (หากไม่ระบุจะไม่สามารถคลิกได้)
+              </p>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="alt">Alt Text</Label>
+              <Input
+                id="alt"
+                name="alt"
+                value={formData.alt || ''}
+                onChange={handleInputChange}
+                placeholder="คำอธิบายรูปภาพสำหรับผู้พิการทางสายตา"
+                disabled={isUpdateLoading}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="display_order">ลำดับการแสดงผล</Label>
+              <Input
+                id="display_order"
+                name="display_order"
+                type="number"
+                min="0"
+                value={formData.display_order || 0}
+                onChange={handleInputChange}
+                placeholder="0"
+                disabled={isUpdateLoading}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="position">ตำแหน่งแสดงผล</Label>
+              <Select
+                value={formData.position || 'internal'}
+                onValueChange={(v) => handleSelectChange('position', v)}
+                disabled={isUpdateLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="เลือกตำแหน่ง" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="internal">ข้างใน (Dashboard / Tours)</SelectItem>
+                  <SelectItem value="public">หน้าแรก (Public)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="status">สถานะ</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(v) => handleSelectChange('status', v)}
+                disabled={isUpdateLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="เลือกสถานะ" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="publish">เผยแพร่</SelectItem>
+                  <SelectItem value="draft">ร่าง</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isUpdateLoading}
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              type="submit"
+              disabled={!isFormValid || isUpdateLoading}
+            >
+              {isUpdateLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              บันทึก
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+});

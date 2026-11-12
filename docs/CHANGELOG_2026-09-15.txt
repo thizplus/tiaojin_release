@@ -1,0 +1,24 @@
+สรุปการแก้ไข — 15 กันยายน 2569
+
+1. Banner หน้าทัวร์ Agent — เพิ่ม BannerCarousel ในหน้า /agent/tours
+2. โปรไฟไหม้ใน Homepage — เพิ่ม section ทัวร์ไฟไหม้ใต้ช่องค้นหา + แก้ backend query ให้ดึงจาก DB ตรงๆ (SQL subquery หา sale periods)
+3. Invoice ใน CSV — เพิ่มคอลัมน์ "เลขที่ใบจอง" (invoice_id) ใน CSV export
+4. WL ใน Period List — เพิ่ม badge "WL" สีส้มในคอลัมน์ที่นั่ง เมื่อ period มี booking ที่ยังจ่ายเงินไม่ครบ (แสดงทั้งหน้า manage period + tour list)
+5. แก้ไขระบบ VAT/WHT — ลบปุ่ม "หัก ณ ที่จ่าย 3%" ออก เหลือแค่ปุ่ม "ใบกำกับภาษี (VAT 7%)" เมื่อเปิดจะแสดงค่าบริการแยก VAT (เช่น 500 - 32.71 = 467.29) + auto-fill หมายเหตุ "กรุณาทำการหัก ณ ที่จ่าย ฿14.02" + แสดงในหมายเหตุ Invoice PDF ด้วย
+6. ใบนัดหมายเฉพาะจ่ายครบ — เปลี่ยนเงื่อนไขดาวน์โหลดไฟล์จาก "มี slip + passport" เป็น "ชำระเงินครบ" ทั้ง Agent และ Sale ซ่อนปุ่มไฟล์ถ้ายังจ่ายไม่ครบ
+7. PDF Agent Header — เพิ่มปุ่ม "PDF + หัวบริษัท" สร้างหน้าปก PDF ด้วยโลโก้ ชื่อบริษัท ที่อยู่ เบอร์โทร + ชื่อทัวร์ แล้วรวมกับ PDF โปรแกรมทัวร์เดิม
+8. ปุ่มคัดลอกโปรขาย — สร้างข้อความโปรโมทสั้น (มี emoji ชื่อทัวร์ สายการบิน highlights ราคา ลิงก์ PDF ข้อมูลบริษัท) กด copy to clipboard ได้เลย
+9. ปุ่มคัดลอกรายละเอียด — สร้างข้อมูลครบ (รหัสทัวร์ ราคา สายการบิน ทุก period + ที่นั่งว่าง ลิงก์ PDF/แบนเนอร์ ข้อมูลบริษัท agent) กด copy to clipboard
+10. ระบบ Banner แยก Public/Internal — เพิ่ม field position ใน Banner model แบ่งเป็น "ข้างใน (Dashboard)" กับ "หน้าแรก (Public)" มี Tabs แยกในหน้า admin + เลือกตอนสร้าง/แก้ไข banner
+11. Banner Homepage — สร้าง PublicBannerCarousel component สำหรับ banner landscape 1120x500 มี auto-slide ทุก 5 วินาที + dots + ลูกศรจางๆ ตอน hover
+12. Banner ในหน้าทัวร์ admin — เพิ่ม banner ในหน้า /admin/tours-regular และ /admin/tours-special
+13. Drag & Drop จัดลำดับ Banner — ติดตั้ง @dnd-kit สร้าง SortableBannerList ลากเพื่อจัดลำดับแล้วกดบันทึก
+14. แก้ภาพ Banner broken — ใช้ getStorageUrl() แปลง relative URL เป็น full backend URL
+15. ขยายคอลัมน์สายการบิน — ปรับ grid จาก 10% เป็น 14% ลดคอลัมน์ราคาจาก 18% เป็น 14%
+16. ค้นหา Company Profile — แก้ backend ให้ค้นจาก name, tax_id, phone, address (เดิมค้นแค่ name) + ลบ PendingOnly ให้เห็นทุก profile
+17. Admin แก้ไข Company Profile — เพิ่ม endpoint PUT /admin/companies/:id + EditCompanyProfileDialog แก้ไข ชื่อ เบอร์ ที่อยู่ จังหวัด รหัสไปรษณีย์ tax_id
+18. คอลัมน์ ATTA/DBD/PP20 เป็น icon — เปลี่ยนจาก URL text เป็น check เขียว (มีไฟล์ คลิกเปิด) / กากบาทแดง (ไม่มีไฟล์)
+19. แก้ Special Tours query — เปลี่ยนจาก filter ใน app layer เป็น SQL subquery ตรงๆ ให้ pagination ถูกต้อง
+20. แก้ Banner เรียงลำดับไม่ทำงาน — backend เปลี่ยน sort จาก created_at DESC เป็น display_order ASC ใน List, GetPublished, GetRecentPublished + frontend sort items ตาม display_order หลัง refetch
+21. แก้ Drag & Drop บันทึกได้ครั้งเดียว — เปลี่ยน useState เป็น useEffect ให้ sync state กับ data ใหม่หลังบันทึก
+22. Drag & Drop ย้ายเข้า tab — ลบ tab "จัดลำดับ" แยก เปลี่ยนเป็นปุ่ม toggle "ตาราง/จัดลำดับ" ในแต่ละ tab (internal/public) จัดลำดับแยกตาม position

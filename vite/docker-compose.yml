@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_APP_TITLE=${VITE_APP_TITLE}
+        - VITE_API_URL=${VITE_API_URL}
+        - VITE_APP_VERSION=${VITE_APP_VERSION}
+        - VITE_WS_URL=${VITE_WS_URL}
+        - VITE_WS_AUTO_CONNECT=${VITE_WS_AUTO_CONNECT}
+        - VITE_WS_NOTIFICATIONS=${VITE_WS_NOTIFICATIONS}
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      - VITE_APP_TITLE=${VITE_APP_TITLE}
+      - VITE_API_URL=${VITE_API_URL}
+      - VITE_APP_VERSION=${VITE_APP_VERSION}
+      - VITE_WS_URL=${VITE_WS_URL}
+      - VITE_WS_AUTO_CONNECT=${VITE_WS_AUTO_CONNECT}
+      - VITE_WS_NOTIFICATIONS=${VITE_WS_NOTIFICATIONS}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
