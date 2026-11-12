@@ -87,9 +87,10 @@ func (s *CompanyServiceImpl) CreateProfile(ctx context.Context, req dto.CreateCo
 		ATTA:      req.ATTA,
 		DBD:       req.DBD,
 		PP20:      req.PP20,
-		Logo:      req.Logo,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Logo:           req.Logo,
+		PdfHeaderImage: req.PdfHeaderImage,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 
 	// Create company profile
@@ -210,6 +211,9 @@ func (s *CompanyServiceImpl) UpdateProfile(ctx context.Context, userID uuid.UUID
 	if req.Logo != nil {
 		profile.Logo = req.Logo
 	}
+	if req.PdfHeaderImage != nil {
+		profile.PdfHeaderImage = req.PdfHeaderImage
+	}
 
 	profile.UpdatedAt = time.Now()
 
@@ -269,6 +273,9 @@ func (s *CompanyServiceImpl) AdminUpdateProfile(ctx context.Context, profileID u
 	}
 	if req.Logo != nil {
 		profile.Logo = req.Logo
+	}
+	if req.PdfHeaderImage != nil {
+		profile.PdfHeaderImage = req.PdfHeaderImage
 	}
 
 	profile.UpdatedAt = time.Now()
@@ -341,6 +348,83 @@ func (s *CompanyServiceImpl) DeleteLogo(ctx context.Context, userID uuid.UUID) (
 	profile.UpdatedAt = time.Now()
 
 	return s.toCompanyProfileResponse(profile), nil
+}
+
+func (s *CompanyServiceImpl) UploadPdfHeaderImage(ctx context.Context, req dto.UploadPdfHeaderImageRequest) (*dto.CompanyProfileResponse, error) {
+	// Business validation - check file size
+	if len(req.ImageData) > MaxLogoSize {
+		return nil, apperrors.ErrLogoTooLarge
+	}
+
+	// Business validation - check file type
+	if !isValidImageType(req.FileType) {
+		return nil, apperrors.ErrInvalidLogoFormat
+	}
+
+	// Get existing profile
+	profile, err := s.companyRepo.GetByUserID(ctx, req.UserID)
+	if err != nil {
+		log.Printf("Error retrieving company profile: %v", err)
+		return nil, fmt.Errorf("failed to get company profile: %w", err)
+	}
+
+	if profile == nil {
+		return nil, apperrors.ErrCompanyProfileNotFound
+	}
+
+	// Generate image URL/path
+	imageURL := s.generatePdfHeaderImagePath(req.UserID, req.FileName)
+
+	// Update pdf header image URL
+	if err := s.companyRepo.UpdatePdfHeaderImage(ctx, profile.ID, imageURL); err != nil {
+		log.Printf("Error updating company profile pdf header image: %v", err)
+		return nil, fmt.Errorf("failed to update pdf header image: %w", err)
+	}
+
+	// Update local profile object
+	profile.PdfHeaderImage = &imageURL
+	profile.UpdatedAt = time.Now()
+
+	return s.toCompanyProfileResponse(profile), nil
+}
+
+func (s *CompanyServiceImpl) DeletePdfHeaderImage(ctx context.Context, userID uuid.UUID) (*dto.CompanyProfileResponse, error) {
+	// Get existing profile
+	profile, err := s.companyRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		log.Printf("Error retrieving company profile: %v", err)
+		return nil, fmt.Errorf("failed to get company profile: %w", err)
+	}
+
+	if profile == nil {
+		return nil, apperrors.ErrCompanyProfileNotFound
+	}
+
+	// Remove pdf header image
+	if err := s.companyRepo.UpdatePdfHeaderImage(ctx, profile.ID, ""); err != nil {
+		log.Printf("Error removing company profile pdf header image: %v", err)
+		return nil, fmt.Errorf("failed to remove pdf header image: %w", err)
+	}
+
+	// Update local profile object
+	profile.PdfHeaderImage = nil
+	profile.UpdatedAt = time.Now()
+
+	return s.toCompanyProfileResponse(profile), nil
+}
+
+func (s *CompanyServiceImpl) generatePdfHeaderImagePath(userID uuid.UUID, fileName string) string {
+	// Generate a unique file path for the pdf header image
+	ext := filepath.Ext(fileName)
+	cleanExt := strings.ToLower(ext)
+
+	// Validate extension against MIME type
+	if cleanExt == "" {
+		cleanExt = ".jpg" // default
+	}
+
+	timestamp := time.Now().Unix()
+	return fmt.Sprintf("pdf-headers/%s/%d%s", userID.String(), timestamp, cleanExt)
 }
 
 func (s *CompanyServiceImpl) DeleteProfile(ctx context.Context, userID uuid.UUID) error {
@@ -492,8 +576,9 @@ func (s *CompanyServiceImpl) toCompanyProfileResponse(profile *models.CompanyPro
 		ATTA:      cdn.GetFullFileURL(profile.ATTA),      // Construct full URL for frontend
 		DBD:       cdn.GetFullFileURL(profile.DBD),       // Construct full URL for frontend
 		PP20:      cdn.GetFullFileURL(profile.PP20),      // Construct full URL for frontend
-		Logo:      cdn.GetFullFileURLPtr(profile.Logo),   // Construct full URL for frontend
-		CreatedAt: profile.CreatedAt.Format(time.RFC3339),
+		Logo:           cdn.GetFullFileURLPtr(profile.Logo),           // Construct full URL for frontend
+		PdfHeaderImage: cdn.GetFullFileURLPtr(profile.PdfHeaderImage), // Construct full URL for frontend
+		CreatedAt:      profile.CreatedAt.Format(time.RFC3339),
 		UpdatedAt: profile.UpdatedAt.Format(time.RFC3339),
 	}
 }

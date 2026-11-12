@@ -268,6 +268,61 @@ export const useUploadFileMutation = (
   });
 };
 
+// PDF Header Image Mutations
+export const useUploadPdfHeaderImageMutation = (
+  options: {
+    onSuccess?: (result: { url: string }) => void;
+    onError?: (error: Error) => void;
+  } = {}
+): UseMutationResult<{ url: string }, Error, File, unknown> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const response = await agentProfileService.uploadPdfHeaderImage(file);
+
+      if (!response.success || !response.data) {
+        throw new Error(response.message || AGENT_PROFILE_MESSAGES.FILE_UPLOAD_FAILED);
+      }
+
+      return response.data;
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: agentProfileKeys.profile });
+      options.onSuccess?.(result);
+    },
+    onError: (error) => {
+      options.onError?.(error);
+    },
+  });
+};
+
+export const useDeletePdfHeaderImageMutation = (
+  options: {
+    onSuccess?: () => void;
+    onError?: (error: Error) => void;
+  } = {}
+): UseMutationResult<void, Error, void, unknown> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const response = await agentProfileService.deletePdfHeaderImage();
+
+      if (!response.success) {
+        throw new Error(response.message || 'ลบภาพหัว PDF ไม่สำเร็จ');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: agentProfileKeys.profile });
+      options.onSuccess?.();
+    },
+    onError: (error) => {
+      options.onError?.(error);
+    },
+  });
+};
+
 // Legacy upload hooks for backward compatibility
 export const useUploadLogoMutation = (
   options: {

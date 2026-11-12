@@ -19,7 +19,8 @@ type CompanyProfile struct {
 	ATTA     string    `gorm:"size:500;column:atta" json:"atta"`
 	DBD      string    `gorm:"size:500;column:dbd" json:"dbd"`
 	PP20     string    `gorm:"size:500;column:pp20" json:"pp20"`
-	Logo     *string   `gorm:"size:500" json:"logo"`
+	Logo           *string `gorm:"size:500" json:"logo"`
+	PdfHeaderImage *string `gorm:"size:500;column:pdf_header_image" json:"pdf_header_image"`
 
 	CreatedAt time.Time      `gorm:"not null" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"not null" json:"updated_at"`

@@ -195,6 +195,75 @@ func (h *CompanyHandler) DeleteLogo(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, "ลบโลโก้สำเร็จ", result)
 }
 
+// UploadPdfHeaderImage uploads company PDF header image (supports multipart/form-data)
+func (h *CompanyHandler) UploadPdfHeaderImage(c *fiber.Ctx) error {
+	user, err := utils.GetUserFromContext(c)
+	if err != nil {
+		return utils.UnauthorizedResponse(c, "User not authenticated")
+	}
+
+	// Get file from form
+	file, err := c.FormFile("pdf_header_image")
+	if err != nil {
+		return utils.ValidationErrorResponse(c, "PDF header image file is required")
+	}
+
+	// Validate file type
+	contentType := file.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "image/") {
+		return utils.ValidationErrorResponse(c, "Only image files are allowed")
+	}
+
+	// Validate file size (max 5MB)
+	const maxSize = 5 * 1024 * 1024
+	if file.Size > maxSize {
+		return utils.ValidationErrorResponse(c, "File size exceeds 5MB limit")
+	}
+
+	// Open file
+	src, err := file.Open()
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to open file", err)
+	}
+	defer src.Close()
+
+	// Read file data
+	fileData, err := io.ReadAll(src)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to read file", err)
+	}
+
+	// Create upload request
+	req := dto.UploadPdfHeaderImageRequest{
+		UserID:    user.ID,
+		ImageData: fileData,
+		FileName:  file.Filename,
+		FileType:  contentType,
+	}
+
+	result, err := h.companyService.UploadPdfHeaderImage(c.Context(), req)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to upload pdf header image", err)
+	}
+
+	return utils.SuccessResponse(c, "อัปโหลดรูปหัวกระดาษ PDF สำเร็จ", result)
+}
+
+// DeletePdfHeaderImage deletes company PDF header image
+func (h *CompanyHandler) DeletePdfHeaderImage(c *fiber.Ctx) error {
+	user, err := utils.GetUserFromContext(c)
+	if err != nil {
+		return utils.UnauthorizedResponse(c, "User not authenticated")
+	}
+
+	result, err := h.companyService.DeletePdfHeaderImage(c.Context(), user.ID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to delete pdf header image", err)
+	}
+
+	return utils.SuccessResponse(c, "ลบรูปหัวกระดาษ PDF สำเร็จ", result)
+}
+
 // ValidateTaxID validates if tax ID is available (public endpoint)
 func (h *CompanyHandler) ValidateTaxID(c *fiber.Ctx) error {
 	taxID := c.Params("tax_id")

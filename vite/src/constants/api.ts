@@ -127,6 +127,8 @@ export const AGENT_PROFILE_API = {
   PROFILE: '/agent/profile',                           // GET, PUT /api/v1/agent/profile
   CREATE_PROFILE: '/agent/profile',                   // POST /api/v1/agent/profile
   CHECK_PROFILE: '/agent/profile/check',              // GET /api/v1/agent/profile/check
+  UPLOAD_PDF_HEADER: '/company-profiles/me/pdf-header-image',   // POST /api/v1/company-profiles/me/pdf-header-image
+  DELETE_PDF_HEADER: '/company-profiles/me/pdf-header-image',   // DELETE /api/v1/company-profiles/me/pdf-header-image
 }
 
 export const COMPANY_PROFILE_API = {

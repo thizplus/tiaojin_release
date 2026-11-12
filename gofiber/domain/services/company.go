@@ -17,6 +17,8 @@ type CompanyService interface {
 	AdminUpdateProfile(ctx context.Context, profileID uuid.UUID, req dto.UpdateCompanyProfileRequest) (*dto.CompanyProfileResponse, error)
 	UploadLogo(ctx context.Context, req dto.UploadLogoRequest) (*dto.CompanyProfileResponse, error)
 	DeleteLogo(ctx context.Context, userID uuid.UUID) (*dto.CompanyProfileResponse, error)
+	UploadPdfHeaderImage(ctx context.Context, req dto.UploadPdfHeaderImageRequest) (*dto.CompanyProfileResponse, error)
+	DeletePdfHeaderImage(ctx context.Context, userID uuid.UUID) (*dto.CompanyProfileResponse, error)
 	DeleteProfile(ctx context.Context, userID uuid.UUID) error
 	ListProfiles(ctx context.Context, req dto.CompanyProfileListRequest) (*dto.CompanyProfileListResponse, error)
 	SearchProfiles(ctx context.Context, query string, offset, limit int) (*dto.CompanyProfileListResponse, error)

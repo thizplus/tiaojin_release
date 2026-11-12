@@ -13,6 +13,7 @@ export interface AgentProfile {
   dbd?: string | null;
   pp20?: string | null;
   logo?: string | null;
+  pdfHeaderImage?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -29,6 +30,7 @@ export interface CreateAgentProfileRequest {
   dbd?: string;
   pp20?: string;
   logo?: string;
+  pdfHeaderImage?: string;
 }
 
 export interface UpdateAgentProfileRequest {
@@ -41,6 +43,7 @@ export interface UpdateAgentProfileRequest {
   dbd?: string;
   pp20?: string;
   logo?: string;
+  pdfHeaderImage?: string;
 }
 
 export interface ProfileCheckResponse {

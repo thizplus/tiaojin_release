@@ -11,6 +11,7 @@ export interface CompanyProfile {
   dbd: string;
   pp20: string;
   logo: string | null;
+  pdf_header_image: string | null;
   created_at: string;
   updated_at: string;
 }

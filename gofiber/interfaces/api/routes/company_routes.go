@@ -25,4 +25,8 @@ func SetupCompanyRoutes(api fiber.Router, h *handlers.Handlers) {
 	// Logo management (form-data support)
 	company.Post("/me/logo", h.CompanyHandler.UploadLogo)       // Upload logo (multipart/form-data)
 	company.Delete("/me/logo", h.CompanyHandler.DeleteLogo)     // Delete logo
+
+	// PDF header image management (form-data support)
+	company.Post("/me/pdf-header-image", h.CompanyHandler.UploadPdfHeaderImage)   // Upload PDF header image
+	company.Delete("/me/pdf-header-image", h.CompanyHandler.DeletePdfHeaderImage) // Delete PDF header image
 }

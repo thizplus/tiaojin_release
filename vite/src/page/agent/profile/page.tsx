@@ -8,6 +8,8 @@ import { ProfileInfoCard } from "@/components/agent/profile/ProfileInfoCard";
 import { CreateProfileForm } from "@/components/agent/profile/CreateProfileForm";
 import { EditProfileDialog } from "@/components/agent/profile/EditProfileDialog";
 import { useAgentProfile } from "@/hooks/agent/useAgentProfile";
+import { useUploadPdfHeaderImageMutation, useDeletePdfHeaderImageMutation } from "@/stores/agent/agentProfileStore";
+import { useToast } from "@/hooks/use-toast";
 import type { CreateAgentProfileRequest, UpdateAgentProfileRequest } from "@/types";
 
 const MESSAGES = {
@@ -16,6 +18,25 @@ const MESSAGES = {
 
 export default function AgentProfilePage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const uploadPdfHeaderMutation = useUploadPdfHeaderImageMutation({
+    onSuccess: () => {
+      toast({ title: 'อัพโหลดภาพหัว PDF สำเร็จ', variant: 'default' });
+    },
+    onError: (error) => {
+      toast({ title: 'อัพโหลดภาพหัว PDF ไม่สำเร็จ', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const deletePdfHeaderMutation = useDeletePdfHeaderImageMutation({
+    onSuccess: () => {
+      toast({ title: 'ลบภาพหัว PDF สำเร็จ', variant: 'default' });
+    },
+    onError: (error) => {
+      toast({ title: 'ลบภาพหัว PDF ไม่สำเร็จ', description: error.message, variant: 'destructive' });
+    },
+  });
 
   const {
     profile,
@@ -144,6 +165,9 @@ export default function AgentProfilePage() {
                   <ProfileInfoCard
                     profile={profile}
                     onEdit={() => setEditDialogOpen(true)}
+                    onUploadPdfHeader={(file) => uploadPdfHeaderMutation.mutate(file)}
+                    onDeletePdfHeader={() => deletePdfHeaderMutation.mutate()}
+                    isUploadingPdfHeader={uploadPdfHeaderMutation.isPending || deletePdfHeaderMutation.isPending}
                     className=""
                   />
                 </div>

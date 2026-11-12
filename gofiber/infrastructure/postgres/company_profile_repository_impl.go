@@ -159,6 +159,23 @@ func (r *CompanyProfileRepositoryImpl) UpdateLogo(ctx context.Context, id uuid.U
 	return nil
 }
 
+func (r *CompanyProfileRepositoryImpl) UpdatePdfHeaderImage(ctx context.Context, id uuid.UUID, imageURL string) error {
+	result := r.db.WithContext(ctx).
+		Model(&models.CompanyProfile{}).
+		Where("id = ?", id).
+		Update("pdf_header_image", imageURL)
+
+	if result.Error != nil {
+		return fmt.Errorf("failed to update company profile pdf header image: %w", result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("company profile with ID %s not found", id)
+	}
+
+	return nil
+}
+
 // ListPendingProfiles lists company profiles for users with pending status
 func (r *CompanyProfileRepositoryImpl) ListPendingProfiles(ctx context.Context, offset, limit int) ([]*models.CompanyProfile, error) {
 	var profiles []*models.CompanyProfile

@@ -19,6 +19,7 @@ type CompanyProfileRepository interface {
 	GetByTaxID(ctx context.Context, taxID string) (*models.CompanyProfile, error)
 	SearchByName(ctx context.Context, name string, offset, limit int) ([]*models.CompanyProfile, error)
 	UpdateLogo(ctx context.Context, id uuid.UUID, logoURL string) error
+	UpdatePdfHeaderImage(ctx context.Context, id uuid.UUID, imageURL string) error
 
 	// Methods for admin approval workflow
 	ListPendingProfiles(ctx context.Context, offset, limit int) ([]*models.CompanyProfile, error)

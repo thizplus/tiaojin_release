@@ -1,19 +1,27 @@
-import { memo } from "react";
-import { Building2, Edit, FileText, ExternalLink } from "lucide-react";
+import { memo, useRef } from "react";
+import { Building2, Edit, FileText, ExternalLink, Upload, Trash2, ImageIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getStorageUrl } from "@/lib/utils";
 import type { AgentProfile } from "@/types";
 
 interface ProfileInfoCardProps {
   profile: AgentProfile;
   onEdit: () => void;
+  onUploadPdfHeader?: (file: File) => void;
+  onDeletePdfHeader?: () => void;
+  isUploadingPdfHeader?: boolean;
   className?: string;
 }
 
 export const ProfileInfoCard = memo(function ProfileInfoCard({
   profile,
   onEdit,
+  onUploadPdfHeader,
+  onDeletePdfHeader,
+  isUploadingPdfHeader = false,
   className = ""
 }: ProfileInfoCardProps) {
+  const pdfHeaderInputRef = useRef<HTMLInputElement>(null);
   // Embedded labels to remove dependency on constants
   const labels = {
     tax_id: 'เลขประจำตัวผู้เสียภาษี',
@@ -182,6 +190,84 @@ export const ProfileInfoCard = memo(function ProfileInfoCard({
           </div>
         </div>
       )}
+
+      {/* PDF Header Image */}
+      <div className="bg-card border border-border rounded-lg p-4">
+        <h3 className="text-base font-semibold text-foreground mb-3">
+          ภาพหัว PDF
+        </h3>
+        <p className="text-sm text-muted-foreground mb-3">
+          ภาพที่จะแสดงเป็นหัวกระดาษในหน้าปกโปรแกรมทัวร์ (แทนที่ header ที่สร้างอัตโนมัติ)
+        </p>
+
+        {profile.pdfHeaderImage ? (
+          <div className="space-y-3">
+            <img
+              src={getStorageUrl(profile.pdfHeaderImage)}
+              alt="ภาพหัว PDF"
+              className="w-full max-h-48 object-contain rounded-lg border border-border bg-muted"
+            />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => pdfHeaderInputRef.current?.click()}
+                disabled={isUploadingPdfHeader}
+              >
+                {isUploadingPdfHeader ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4 mr-2" />
+                )}
+                เปลี่ยนภาพ
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={onDeletePdfHeader}
+                disabled={isUploadingPdfHeader}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                ลบภาพ
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-3 p-6 border-2 border-dashed border-border rounded-lg">
+            <ImageIcon className="w-10 h-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">ยังไม่มีภาพหัว PDF</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => pdfHeaderInputRef.current?.click()}
+              disabled={isUploadingPdfHeader}
+            >
+              {isUploadingPdfHeader ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4 mr-2" />
+              )}
+              อัพโหลดภาพ
+            </Button>
+          </div>
+        )}
+
+        {/* Hidden file input */}
+        <input
+          ref={pdfHeaderInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onUploadPdfHeader) {
+              onUploadPdfHeader(file);
+            }
+            // Reset input value เพื่อให้เลือกไฟล์เดิมซ้ำได้
+            e.target.value = '';
+          }}
+        />
+      </div>
     </div>
   );
 });

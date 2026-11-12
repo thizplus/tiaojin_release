@@ -14,8 +14,9 @@ type CompanyProfileResponse struct {
 	ATTA      string    `json:"atta"`
 	DBD       string    `json:"dbd"`
 	PP20      string    `json:"pp20"`
-	Logo      *string   `json:"logo"`
-	CreatedAt string    `json:"created_at"`
+	Logo           *string `json:"logo"`
+	PdfHeaderImage *string `json:"pdfHeaderImage"`
+	CreatedAt      string  `json:"created_at"`
 	UpdatedAt string    `json:"updated_at"`
 }
 
@@ -30,7 +31,8 @@ type CreateCompanyProfileRequest struct {
 	ATTA     string    `json:"atta,omitempty"`
 	DBD      string    `json:"dbd,omitempty"`
 	PP20     string    `json:"pp20,omitempty"`
-	Logo     *string   `json:"logo,omitempty"`
+	Logo           *string `json:"logo,omitempty"`
+	PdfHeaderImage *string `json:"pdfHeaderImage,omitempty"`
 }
 
 type UpdateCompanyProfileRequest struct {
@@ -43,7 +45,8 @@ type UpdateCompanyProfileRequest struct {
 	ATTA     *string `json:"atta,omitempty"`
 	DBD      *string `json:"dbd,omitempty"`
 	PP20     *string `json:"pp20,omitempty"`
-	Logo     *string `json:"logo,omitempty"`
+	Logo           *string `json:"logo,omitempty"`
+	PdfHeaderImage *string `json:"pdfHeaderImage,omitempty"`
 }
 
 type UploadLogoRequest struct {
@@ -51,6 +54,13 @@ type UploadLogoRequest struct {
 	LogoData []byte    `json:"logo_data" validate:"required"`
 	FileName string    `json:"file_name" validate:"required"`
 	FileType string    `json:"file_type" validate:"required,oneof=image/jpeg image/png image/webp"`
+}
+
+type UploadPdfHeaderImageRequest struct {
+	UserID    uuid.UUID `json:"user_id" validate:"required"`
+	ImageData []byte    `json:"image_data" validate:"required"`
+	FileName  string    `json:"file_name" validate:"required"`
+	FileType  string    `json:"file_type" validate:"required,oneof=image/jpeg image/png image/webp"`
 }
 
 type CompanyProfileListRequest struct {

@@ -15,7 +15,7 @@ interface GenerateOptions {
 
 /**
  * สร้าง PDF หน้าปกบริษัท Agent (แนวนอน) + ภาพปกทัวร์ + แนบ PDF โปรแกรมทัวร์ต่อท้าย
- * Layout: Logo ซ้าย | ข้อมูลบริษัทกลาง | เลขภาษีขวา → เส้นทอง → ภาพปกทัวร์ → ข้อมูลทัวร์
+ * Layout: Logo ซ้าย | ข้อมูลบริษัทกลาง | เลขภาษีขวา → เส้นทอง → ภาพปกทัวร์ (เต็มขอบ)
  */
 export async function generatePdfWithAgentHeader({
   companyProfile,
@@ -48,169 +48,208 @@ export async function generatePdfWithAgentHeader({
   const { width, height } = page.getSize();
 
   // === สี ===
-  const goldColor = rgb(0.76, 0.6, 0.2);
+  const redColor = rgb(0.78, 0.12, 0.12);
   const darkText = rgb(0.12, 0.12, 0.12);
-  const grayText = rgb(0.35, 0.35, 0.35);
-  const lightGray = rgb(0.55, 0.55, 0.55);
+  const grayText = rgb(0.3, 0.3, 0.3);
   const headerBg = rgb(0.97, 0.97, 0.97);
 
-  // === Layout ===
-  const margin = 40;
-  const headerTop = height - 30;
-  const headerHeight = 130;
-  const headerBottom = headerTop - headerHeight;
-  const logoAreaWidth = 120;
-  const taxAreaWidth = 140;
-  const centerStartX = margin + logoAreaWidth + 10;
-  const centerEndX = width - margin - taxAreaWidth;
+  // ตัวแปรบอกตำแหน่งล่างสุดของ header (ใช้ต่อในส่วน thumbnail/tour info)
+  let headerBottomY: number;
 
-  // -- พื้นหลัง Header --
-  page.drawRectangle({
-    x: margin,
-    y: headerBottom,
-    width: width - margin * 2,
-    height: headerHeight,
-    color: headerBg,
-    borderColor: rgb(0.88, 0.88, 0.88),
-    borderWidth: 0.5,
-  });
-
-  // === ฝั่งซ้าย: Logo ===
-  if (companyProfile.logo) {
+  if (companyProfile.pdf_header_image) {
+    // === Custom PDF Header Image — วาดเต็มความกว้างหน้ากระดาษ ===
     try {
-      const logoBytes = await fetch(getStorageUrl(companyProfile.logo)).then(r => r.arrayBuffer());
-      const logoUint8 = new Uint8Array(logoBytes);
+      const headerImgBytes = await fetch(getStorageUrl(companyProfile.pdf_header_image)).then(r => r.arrayBuffer());
+      const headerImgUint8 = new Uint8Array(headerImgBytes);
 
-      let logoImage;
-      if (logoUint8[0] === 0x89 && logoUint8[1] === 0x50) {
-        logoImage = await pdfDoc.embedPng(logoBytes);
+      let headerImage;
+      if (headerImgUint8[0] === 0x89 && headerImgUint8[1] === 0x50) {
+        headerImage = await pdfDoc.embedPng(headerImgBytes);
       } else {
-        logoImage = await pdfDoc.embedJpg(logoBytes);
+        headerImage = await pdfDoc.embedJpg(headerImgBytes);
       }
 
-      const maxW = 100, maxH = 90;
-      const scale = Math.min(maxW / logoImage.width, maxH / logoImage.height, 1);
-      const logoW = logoImage.width * scale;
-      const logoH = logoImage.height * scale;
+      // Scale to full page width, cap height at 200pt
+      const imgScale = width / headerImage.width;
+      const scaledH = headerImage.height * imgScale;
+      const finalH = Math.min(scaledH, 200);
+      const finalW = finalH < scaledH ? (finalH / scaledH) * width : width;
+      const imgX = (width - finalW) / 2;
+      const imgY = height - finalH;
 
-      const logoX = margin + (logoAreaWidth - logoW) / 2;
-      const logoY = headerBottom + (headerHeight - logoH) / 2 + 5;
-
-      page.drawImage(logoImage, {
-        x: logoX,
-        y: logoY,
-        width: logoW,
-        height: logoH,
+      page.drawImage(headerImage, {
+        x: imgX,
+        y: imgY,
+        width: finalW,
+        height: finalH,
       });
+
+      headerBottomY = imgY;
     } catch {
-      // logo load ไม่ได้ ข้ามไป
+      // ภาพหัว PDF โหลดไม่ได้ — fallback ใช้ generated header
+      headerBottomY = height;
     }
-  }
+  } else {
+    // === Generated Header (โค้ดเดิม) ===
+    const textPadding = 15;
+    const headerTop = height;
+    const headerHeight = 145;
+    const headerBottom = headerTop - headerHeight;
+    const logoAreaWidth = 130;
+    const taxAreaWidth = 140;
+    const centerStartX = logoAreaWidth;
 
-  // ATTA ใบอนุญาต (ใต้ logo area)
-  if (companyProfile.atta) {
-    const attaText = `ใบอนุญาตเลขที่: ${companyProfile.atta}`;
-    const attaWidth = normal.widthOfTextAtSize(attaText, 8);
-    const attaX = margin + (logoAreaWidth - attaWidth) / 2;
-    page.drawText(attaText, {
-      x: attaX,
-      y: headerBottom + 8,
-      size: 8,
-      font: normal,
-      color: lightGray,
-    });
-  }
-
-  // === ฝั่งกลาง: ชื่อบริษัท + ที่อยู่ + เบอร์โทร ===
-  const centerMidX = (centerStartX + centerEndX) / 2;
-
-  // ชื่อบริษัท (bold ใหญ่)
-  const companyName = companyProfile.name;
-  const nameSize = companyName.length > 25 ? 18 : 22;
-  const nameWidth = bold.widthOfTextAtSize(companyName, nameSize);
-  page.drawText(companyName, {
-    x: centerMidX - nameWidth / 2,
-    y: headerTop - 35,
-    size: nameSize,
-    font: bold,
-    color: darkText,
-  });
-
-  // ที่อยู่ บรรทัดที่ 1
-  if (companyProfile.address) {
-    const addr1Width = normal.widthOfTextAtSize(companyProfile.address, 10);
-    page.drawText(companyProfile.address, {
-      x: centerMidX - addr1Width / 2,
-      y: headerTop - 58,
-      size: 10,
-      font: normal,
-      color: grayText,
-    });
-  }
-
-  // ที่อยู่ บรรทัดที่ 2 (จังหวัด + รหัสไปรษณีย์)
-  const addressLine2 = [companyProfile.province, companyProfile.zipcode].filter(Boolean).join(' ');
-  if (addressLine2) {
-    const addr2Width = normal.widthOfTextAtSize(addressLine2, 10);
-    page.drawText(addressLine2, {
-      x: centerMidX - addr2Width / 2,
-      y: headerTop - 73,
-      size: 10,
-      font: normal,
-      color: grayText,
-    });
-  }
-
-  // เบอร์โทร
-  if (companyProfile.phone) {
-    const phoneText = `Tel: ${companyProfile.phone}`;
-    const phoneWidth = normal.widthOfTextAtSize(phoneText, 10);
-    page.drawText(phoneText, {
-      x: centerMidX - phoneWidth / 2,
-      y: headerTop - 90,
-      size: 10,
-      font: normal,
-      color: grayText,
-    });
-  }
-
-  // === ฝั่งขวา: เลขประจำตัวผู้เสียภาษี ===
-  if (companyProfile.tax_id) {
-    const taxLabelText = 'เลขประจำตัวผู้เสียภาษี';
-    const taxValueText = companyProfile.tax_id;
-    const rightX = width - margin - taxAreaWidth;
-
-    const taxLabelWidth = normal.widthOfTextAtSize(taxLabelText, 8);
-    page.drawText(taxLabelText, {
-      x: rightX + (taxAreaWidth - taxLabelWidth) / 2,
-      y: headerTop - 55,
-      size: 8,
-      font: normal,
-      color: lightGray,
+    // -- พื้นหลัง Header (เต็มขอบ) --
+    page.drawRectangle({
+      x: 0,
+      y: headerBottom,
+      width: width,
+      height: headerHeight,
+      color: headerBg,
     });
 
-    const taxValueWidth = bold.widthOfTextAtSize(taxValueText, 11);
-    page.drawText(taxValueText, {
-      x: rightX + (taxAreaWidth - taxValueWidth) / 2,
-      y: headerTop - 70,
-      size: 11,
+    // เส้นขอบล่าง header
+    page.drawLine({
+      start: { x: 0, y: headerBottom },
+      end: { x: width, y: headerBottom },
+      thickness: 0.5,
+      color: rgb(0.85, 0.85, 0.85),
+    });
+
+    // === ฝั่งซ้าย: Logo ===
+    if (companyProfile.logo) {
+      try {
+        const logoBytes = await fetch(getStorageUrl(companyProfile.logo)).then(r => r.arrayBuffer());
+        const logoUint8 = new Uint8Array(logoBytes);
+
+        let logoImage;
+        if (logoUint8[0] === 0x89 && logoUint8[1] === 0x50) {
+          logoImage = await pdfDoc.embedPng(logoBytes);
+        } else {
+          logoImage = await pdfDoc.embedJpg(logoBytes);
+        }
+
+        const maxW = 110, maxH = 95;
+        const scale = Math.min(maxW / logoImage.width, maxH / logoImage.height, 1);
+        const logoW = logoImage.width * scale;
+        const logoH = logoImage.height * scale;
+
+        const logoX = textPadding + (logoAreaWidth - textPadding - logoW) / 2;
+        const logoY = headerBottom + (headerHeight - logoH) / 2 + 5;
+
+        page.drawImage(logoImage, {
+          x: logoX,
+          y: logoY,
+          width: logoW,
+          height: logoH,
+        });
+      } catch {
+        // logo load ไม่ได้ ข้ามไป
+      }
+    }
+
+    // หมายเหตุ: companyProfile.atta เก็บเป็น URL ไฟล์ PDF ไม่ใช่เลขใบอนุญาต จึงไม่แสดงใน header
+
+    // === ฝั่งกลาง: ชื่อบริษัท + ที่อยู่ + เบอร์โทร (ชิดซ้าย) ===
+    const infoX = centerStartX + 5;
+
+    // ชื่อบริษัท (bold ใหญ่)
+    const companyName = companyProfile.name;
+    const nameSize = companyName.length > 20 ? 22 : 26;
+    page.drawText(companyName, {
+      x: infoX,
+      y: headerTop - 38,
+      size: nameSize,
       font: bold,
       color: darkText,
     });
+
+    // ที่อยู่ บรรทัดที่ 1
+    if (companyProfile.address) {
+      page.drawText(companyProfile.address, {
+        x: infoX,
+        y: headerTop - 62,
+        size: 12,
+        font: normal,
+        color: grayText,
+      });
+    }
+
+    // ที่อยู่ บรรทัดที่ 2 (จังหวัด + รหัสไปรษณีย์)
+    const addressLine2 = [companyProfile.province, companyProfile.zipcode].filter(Boolean).join(' ');
+    if (addressLine2) {
+      page.drawText(addressLine2, {
+        x: infoX,
+        y: headerTop - 80,
+        size: 12,
+        font: normal,
+        color: grayText,
+      });
+    }
+
+    // เบอร์โทร
+    if (companyProfile.phone) {
+      page.drawText(`โทรศัพท์: ${companyProfile.phone}`, {
+        x: infoX,
+        y: headerTop - 98,
+        size: 12,
+        font: bold,
+        color: grayText,
+      });
+    }
+
+    // === ฝั่งขวา: พื้นแดงเฉียง + เลขประจำตัวผู้เสียภาษี (ขาว) ===
+    const whiteText = rgb(1, 1, 1);
+    const slant = 20;
+
+    // วาด parallelogram แดง ด้วย SVG path
+    const redW = taxAreaWidth + slant;
+    const svgPath = `M ${slant} 0 L ${redW} 0 L ${redW} ${headerHeight} L 0 ${headerHeight} Z`;
+    page.drawSvgPath(svgPath, {
+      x: width - redW,
+      y: headerTop,
+      color: redColor,
+    });
+
+    if (companyProfile.tax_id) {
+      const taxLabelText = 'เลขประจำตัวผู้เสียภาษี';
+      const taxValueText = companyProfile.tax_id;
+      const redCenterX = width - taxAreaWidth / 2;
+
+      const taxLabelWidth = normal.widthOfTextAtSize(taxLabelText, 10);
+      page.drawText(taxLabelText, {
+        x: redCenterX - taxLabelWidth / 2,
+        y: headerTop - 55,
+        size: 10,
+        font: normal,
+        color: whiteText,
+      });
+
+      const taxValueWidth = bold.widthOfTextAtSize(taxValueText, 13);
+      page.drawText(taxValueText, {
+        x: redCenterX - taxValueWidth / 2,
+        y: headerTop - 78,
+        size: 13,
+        font: bold,
+        color: whiteText,
+      });
+    }
+
+    // === เส้นแดง คั่น (เต็มขอบ) ===
+    const lineY = headerBottom - 3;
+    page.drawRectangle({
+      x: 0,
+      y: lineY,
+      width: width,
+      height: 3,
+      color: redColor,
+    });
+
+    headerBottomY = lineY;
   }
 
-  // === เส้นทอง คั่น ===
-  const goldLineY = headerBottom - 8;
-  page.drawRectangle({
-    x: margin,
-    y: goldLineY,
-    width: width - margin * 2,
-    height: 3,
-    color: goldColor,
-  });
-
-  // === ภาพปกทัวร์ (Thumbnail) — เต็มความกว้างไม่มี padding ===
-  let nextY = goldLineY - 10;
+  // === ภาพปกทัวร์ (Thumbnail) — เต็มขอบไม่มี padding ===
+  let nextY = headerBottomY;
 
   if (tourThumbnail) {
     try {
@@ -224,16 +263,15 @@ export async function generatePdfWithAgentHeader({
         thumbImage = await pdfDoc.embedJpg(thumbBytes);
       }
 
-      // เต็มความกว้างหน้ากระดาษ (ไม่มี margin) สูงตามสัดส่วน
-      const imgW = width;
-      const imgScale = imgW / thumbImage.width;
+      // เต็มความกว้างหน้ากระดาษ สูงตามสัดส่วน
+      const imgScale = width / thumbImage.width;
       const imgH = thumbImage.height * imgScale;
-      // จำกัดไม่เกินพื้นที่ว่างที่เหลือ (เผื่อที่ให้ข้อมูลทัวร์ด้านล่าง)
-      const maxImgH = nextY - 120;
+      // จำกัดไม่เกินพื้นที่ว่าง (เผื่อข้อมูลทัวร์ด้านล่าง)
+      const maxImgH = nextY - 100;
       const finalH = Math.min(imgH, maxImgH);
-      const finalW = finalH < imgH ? (finalH / imgH) * imgW : imgW;
+      const finalW = finalH < imgH ? (finalH / imgH) * width : width;
 
-      const imgX = width / 2 - finalW / 2;
+      const imgX = (width - finalW) / 2;
       const imgY = nextY - finalH;
 
       page.drawImage(thumbImage, {
@@ -243,22 +281,22 @@ export async function generatePdfWithAgentHeader({
         height: finalH,
       });
 
-      nextY = imgY - 15;
+      nextY = imgY - 10;
     } catch {
       // thumbnail load ไม่ได้ ข้ามไป
     }
   }
 
   // === ข้อมูลทัวร์ ===
-  let infoY = nextY - 10;
+  let infoY = nextY - 15;
 
   // "โปรแกรมทัวร์"
   const programLabel = 'โปรแกรมทัวร์';
-  const programWidth = bold.widthOfTextAtSize(programLabel, 24);
+  const programWidth = bold.widthOfTextAtSize(programLabel, 22);
   page.drawText(programLabel, {
     x: width / 2 - programWidth / 2,
     y: infoY,
-    size: 24,
+    size: 22,
     font: bold,
     color: darkText,
   });
@@ -276,42 +314,42 @@ export async function generatePdfWithAgentHeader({
     }
     if (remaining) lines.push(remaining);
 
-    infoY -= 40;
+    infoY -= 35;
     for (const line of lines) {
-      const lineWidth = bold.widthOfTextAtSize(line, 16);
+      const lineWidth = bold.widthOfTextAtSize(line, 15);
       page.drawText(line, {
         x: width / 2 - lineWidth / 2,
         y: infoY,
-        size: 16,
+        size: 15,
         font: bold,
         color: darkText,
       });
-      infoY -= 24;
+      infoY -= 22;
     }
   }
 
   // รหัสทัวร์
   if (tourCode) {
-    infoY -= 5;
+    infoY -= 3;
     const codeText = `รหัสทัวร์: ${tourCode}`;
-    const codeWidth = normal.widthOfTextAtSize(codeText, 14);
+    const codeWidth = normal.widthOfTextAtSize(codeText, 13);
     page.drawText(codeText, {
       x: width / 2 - codeWidth / 2,
       y: infoY,
-      size: 14,
+      size: 13,
       font: normal,
       color: grayText,
     });
-    infoY -= 24;
+    infoY -= 20;
   }
 
   // เมือง
   if (cityTitle) {
-    const cityWidth = normal.widthOfTextAtSize(cityTitle, 14);
+    const cityWidth = normal.widthOfTextAtSize(cityTitle, 13);
     page.drawText(cityTitle, {
       x: width / 2 - cityWidth / 2,
       y: infoY,
-      size: 14,
+      size: 13,
       font: normal,
       color: grayText,
     });

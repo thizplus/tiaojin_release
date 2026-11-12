@@ -108,6 +108,40 @@ class AgentProfileService {
   }
 
   /**
+   * อัพโหลดภาพหัว PDF สำหรับ profile
+   */
+  async uploadPdfHeaderImage(file: File): Promise<ApiResponse<{ url: string }>> {
+    try {
+      const formData = new FormData();
+      formData.append('pdf_header_image', file);
+
+      const response = await apiService.upload<ApiResponse<{ url: string }>>(
+        API.AGENT_PROFILE.UPLOAD_PDF_HEADER,
+        formData
+      );
+      return response;
+    } catch (error) {
+      console.error('Failed to upload PDF header image:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ลบภาพหัว PDF ของ profile
+   */
+  async deletePdfHeaderImage(): Promise<ApiResponse<null>> {
+    try {
+      const response = await apiService.delete<ApiResponse<null>>(
+        API.AGENT_PROFILE.DELETE_PDF_HEADER
+      );
+      return response;
+    } catch (error) {
+      console.error('Failed to delete PDF header image:', error);
+      throw error;
+    }
+  }
+
+  /**
    * อัพโหลดใบอนุญาต ATTA
    */
   async uploadAtta(file: File): Promise<ApiResponse<{ url: string; fileName: string }>> {
